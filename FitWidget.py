@@ -13,13 +13,14 @@ QDoubleSpinBox, QLabel, QComboBox
 )
 from PyQt5.QtCore import QDir, Qt
 
+from lmfit import CompositeModel, Model
 from lmfit.models import GaussianModel
-from arpes.io import example_data
-
+from lmfit.lineshapes import gaussian
 
 # user defined package
 from reader import read_file
-from utils import normalize, shirley_baseline
+from utils import (fwhm2sigma, sigma2fwhm, calculate_height, instr_delta_e, 
+fermi_dirac, convolve, normalize, shirley_baseline)
 
 
 def getDoubleSpinBox():
@@ -31,19 +32,6 @@ def getDoubleSpinBox():
 	box.setValue(10.00)
 	return box
 	
-def sigma2fwhm(sigma):
-	fwhm = 2.3548*sigma
-	return fwhm
-
-def fwhm2sigma(fwhm):
-	if isinstance(fwhm, float):
-		sigma = 1.0/2.3548 * fwhm
-		return sigma 
-
-def calculate_height(area, sigma):
-	if isinstance(area, float) and isinstance(sigma, float):
-	    return 0.3989 * area / max(1e-12,sigma)
-
 class FitWidget(QWidget):
 	def __init__(self):
 		super().__init__()
@@ -122,7 +110,7 @@ class FitWidget(QWidget):
 		self.gauss_para_group.setTitle("Core Level")
 
 		form_layout = QFormLayout()
-		lb_ctr = QLabel("Center")
+		lb_ctr = QLabel("Center (eV)")
 		self.dsb_center = getDoubleSpinBox()
 		form_layout.addRow(lb_ctr, self.dsb_center)
 
@@ -166,19 +154,34 @@ class FitWidget(QWidget):
 		form_layout = QFormLayout()
 		lb_temp = QLabel("Temperature (K)")
 		self.dsb_temp = getDoubleSpinBox()
+		self.dsb_temp.setMinimum(0.0)
+		self.dsb_temp.setValue(300)
 		form_layout.addRow(lb_temp, self.dsb_temp)
 
-		lb_fermi_ctr = QLabel("Fermi Center(eV)")
+		lb_fermi_ctr = QLabel("Center(meV)")
 		self.dsb_fermi_ctr = getDoubleSpinBox()
+		self.dsb_fermi_ctr.setValue(0.0)
 		form_layout.addRow(lb_fermi_ctr, self.dsb_fermi_ctr)
 
-		lb_delta_e = QLabel("BL \u0394E (eV)")
-		self.dsb_delta_e = getDoubleSpinBox()
-		form_layout.addRow(lb_delta_e, self.dsb_delta_e)
+		lb_fermi_amp = QLabel("Amplitude")
+		self.dsb_fermi_amp = getDoubleSpinBox()
+		self.dsb_fermi_amp.setValue(10)
+		form_layout.addRow(lb_fermi_amp, self.dsb_fermi_amp)
 
-		lb_sptrm = QLabel("Spectrum \u0394E (eV)")
-		self.dsb_sptrm = getDoubleSpinBox()
-		form_layout.addRow(lb_sptrm, self.dsb_sptrm)	
+		lb_beaml_e = QLabel("BL \u0394E (meV)")
+		self.dsb_beaml_e = getDoubleSpinBox()
+		form_layout.addRow(lb_beaml_e, self.dsb_beaml_e)
+		self.dsb_beaml_e.valueChanged.connect(self.update_meters_e)
+
+		lb_conv_e = QLabel("Convolve \u0394E (meV)")
+		self.dsb_conv_e = getDoubleSpinBox()
+		form_layout.addRow(lb_conv_e, self.dsb_conv_e)
+		self.dsb_conv_e.valueChanged.connect(self.update_meters_e)
+		
+		lb_instr = QLabel("Instrument \u0394E (meV)")
+		self.dsb_instr = getDoubleSpinBox()
+		form_layout.addRow(lb_instr, self.dsb_instr)
+		
 
 		self.fermi_para_group.setLayout(form_layout)
 		self.fermi_para_group.setDisabled(True)		
@@ -221,6 +224,9 @@ class FitWidget(QWidget):
 	
 	def update_height(self):
 		self.dsb_height.setValue(calculate_height(self.dsb_area.value(), self.dsb_sigma.value()))
+
+	def update_meters_e(self):
+		self.dsb_instr.setValue(instr_delta_e(self.dsb_beaml_e.value(), self.dsb_conv_e.value()))
 
 	def open_file(self):
 		pathfile_name, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', self.dir)
@@ -272,8 +278,8 @@ class FitWidget(QWidget):
 		# preview the Gaussion peak with init parameters 
 		# print("preview is clicked!")
 		if self.has_data():
-			self.setup_model()
-			self.eval_result = self.model.eval(self.pars, x=self.x0)	
+			self.setup_gauss_model()
+			self.eval_result = self.model.eval(self.gauss_pars, x=self.x0)	
 			self.plot_preview_result()
 
 	def plot_preview_result(self):
@@ -288,38 +294,71 @@ class FitWidget(QWidget):
 		# print(self.has_data())
 		# print("fit is clicked!")
 		if self.has_data(): 
-			self.setup_model()
-			self.gauss_fit()
-			self.update_result_para()
-			self.plot_result()
+			if self.comb_func.currentIndex() == 0:
+				self.setup_gauss_model()
+				self.gauss_fit()
+				self.update_result_para()
+				self.plot_result()
+			elif self.comb_func.currentIndex() == 1:
+				self.setup_fermi_model()
+				self.fermi_fit()
+				self.update_result_para()
+				self.plot_result()
 
+	def setup_fermi_model(self):
+		self.fermi_model = CompositeModel(Model(fermi_dirac), Model(gaussian), convolve)
+		self.fermi_pars = self.fermi_model.make_params()
+		self.fermi_pars['amplitude'].set(self.dsb_fermi_amp.value())
+		self.fermi_pars['center'].set(-self.dsb_fermi_ctr.value()/1000)
+		self.fermi_pars['sigma'].set(0.2)
+		self.fermi_pars['tempr'].set(value=self.dsb_temp.value()/1000, vary=False)
+
+	def fermi_fit(self):
+		if hasattr(self,"fermi_model"):
+			self.fermi_results = self.fermi_model.fit(self.y0, self.fermi_pars, x=-self.x0, nan_policy="omit")
+		
 	def update_result_para(self):
-		self.dsb_center.setValue(self.results.params["center"].value)
-		self.dsb_area.setValue(self.results.params["amplitude"].value)
-		self.dsb_fwhm.setValue(sigma2fwhm(self.results.params["sigma"].value))
-		self.dsb_chi_sqr.setValue(self.results.redchi)
+		if self.comb_func.currentIndex() == 0:		
+			self.dsb_center.setValue(-self.results.params["center"].value)
+			self.dsb_area.setValue(self.results.params["amplitude"].value)
+			self.dsb_fwhm.setValue(sigma2fwhm(self.results.params["sigma"].value))
+			self.dsb_chi_sqr.setValue(self.results.redchi)
+		elif self.comb_func.currentIndex() == 1:
+			self.dsb_fermi_amp.setValue(self.fermi_results.params["amplitude"].value)
+			self.dsb_fermi_ctr.setValue(-self.fermi_results.params["center"].value * 1000)
+			self.dsb_conv_e.setValue(sigma2fwhm(self.fermi_results.params["sigma"].value) * 1000)
+			self.fermi_heigh = calculate_height(self.fermi_results.params["amplitude"].value,
+			self.fermi_results.params["sigma"].value )
+			print(self.fermi_heigh)
+
 
 	def plot_result(self):
 		self.clear_plot()
-		self.a_top.plot(self.x0, self.y0, "o", color= "b", label="exp")
-		self.a_top.plot(self.x0, self.results.best_fit,'r-', label="fit" )
-		self.a_top.fill_between(self.x0, self.results.best_fit, color="r", alpha=0.5)
-		self.a_bot.plot(self.x0, self.results.residual, 'g.', label='residual')
-		
-
-		self.a_top.annotate("", xy=(0.5, 0.5), xycoords=self.a_top.transAxes)
+		if self.comb_func.currentIndex() == 0:		
+			self.a_top.plot(self.x0, self.y0, "o", color= "b", label="exp")
+			self.a_top.plot(self.x0, self.results.best_fit,'r-', label="fit" )
+			self.a_top.fill_between(self.x0, self.results.best_fit, color="r", alpha=0.5)
+			self.a_bot.plot(self.x0, self.results.residual, 'g.', label='residual')
+			# self.a_top.annotate("", xy=(0.5, 0.5), xycoords=self.a_top.transAxes)
+		elif self.comb_func.currentIndex() == 1:
+			self.comps = self.fermi_results.eval_components(x=-self.x0)
+			self.a_top.plot(self.x0, self.y0, "o", color= "b", label="exp")
+			self.a_top.plot(self.x0, self.fermi_results.best_fit,'r-', label="fit" )
+			self.a_top.plot(self.x0, 10 * self.comps['fermi_dirac'], 'k--', label='Fermi-Dirac component')
+			self.a_top.plot(self.x0, 10 * self.comps['gaussian'], 'k-.', label='Gaussian component')
+			self.a_bot.plot(self.x0, self.fermi_results.residual, 'g.', label='residual')
 		self.update_plot()
 	
-	def setup_model(self):
+	def setup_gauss_model(self):
 		self.model = GaussianModel()
-		self.pars = self.model.make_params()
-		self.pars['center'].set(self.dsb_center.value())
-		self.pars['sigma'].set(self.dsb_sigma.value())
-		self.pars['amplitude'].set(self.dsb_area.value())
+		self.gauss_pars = self.model.make_params()
+		self.gauss_pars['center'].set(self.dsb_center.value())
+		self.gauss_pars['sigma'].set(self.dsb_sigma.value())
+		self.gauss_pars['amplitude'].set(self.dsb_area.value())
 
 	def gauss_fit(self, method = "leastsq"):
 		if hasattr(self,"model"):
-			self.results = self.model.fit(self.y0, self.pars, x=self.x0, method=method, nan_policy="omit")
+			self.results = self.model.fit(self.y0, self.gauss_pars, x=self.x0, method=method, nan_policy="omit")
 
 			
 	def has_data(self):
