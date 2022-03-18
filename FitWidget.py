@@ -216,9 +216,11 @@ class FitWidget(QWidget):
 		if self.comb_func.currentIndex() == 0:
 			self.gauss_para_group.setEnabled(True)
 			self.fermi_para_group.setDisabled(True)
+			self.b_guess.setVisible(False)
 		elif self.comb_func.currentIndex() == 1:
 			self.gauss_para_group.setDisabled(True)
 			self.fermi_para_group.setEnabled(True)
+			self.b_guess.setVisible(False)
 
 	def update_sigma(self):
 		self.dsb_sigma.setValue(fwhm2sigma(self.dsb_fwhm.value()))
@@ -282,7 +284,7 @@ class FitWidget(QWidget):
 			elif self.comb_func.currentIndex() == 1:
 				self.setup_fermi_model()
 				try:
-					self.fermi_pars= self.fermi_model.guess(self.y0, x=-self.x0)
+					self.fermi_pars= self.fermi_model.guess(self.y0, x=self.x0)
 				except NotImplementedError:
 					print(f"The guee method is not implemented for model {type(self.setup_gauss_model())}")
 
@@ -321,9 +323,9 @@ class FitWidget(QWidget):
 		self.fermi_model = CompositeModel(Model(fermi_dirac), Model(gaussian), convolve)
 		self.fermi_pars = self.fermi_model.make_params()
 		self.fermi_pars['amplitude'].set(self.dsb_fermi_amp.value())
-		self.fermi_pars['center'].set(-self.dsb_fermi_ctr.value()/1000)
+		self.fermi_pars['center'].set(self.dsb_fermi_ctr.value()/1000)
 		self.fermi_pars['sigma'].set(0.2)
-		self.fermi_pars['tempr'].set(value=self.dsb_temp.value()/1000, vary=False)
+		self.fermi_pars['tempr'].set(value=self.dsb_temp.value(), vary=False)
 		
 	def update_result_para(self):
 		if self.comb_func.currentIndex() == 0:		
@@ -333,11 +335,11 @@ class FitWidget(QWidget):
 			self.dsb_chi_sqr.setValue(self.gauss_results.redchi)
 		elif self.comb_func.currentIndex() == 1:
 			self.dsb_fermi_amp.setValue(self.fermi_results.params["amplitude"].value)
-			self.dsb_fermi_ctr.setValue(-self.fermi_results.params["center"].value * 1000)
+			self.dsb_fermi_ctr.setValue(self.fermi_results.params["center"].value * 1000)
 			self.dsb_conv_e.setValue(sigma2fwhm(self.fermi_results.params["sigma"].value) * 1000)
 			self.fermi_heigh = calculate_height(self.fermi_results.params["amplitude"].value,
 			self.fermi_results.params["sigma"].value )
-			print(self.fermi_heigh)
+			# print(self.fermi_heigh)
 
 
 	def plot_result(self):
@@ -349,11 +351,11 @@ class FitWidget(QWidget):
 			self.a_bot.plot(self.x0, self.gauss_results.residual, 'g.', label='residual')
 			# self.a_top.annotate("", xy=(0.5, 0.5), xycoords=self.a_top.transAxes)
 		elif self.comb_func.currentIndex() == 1:
-			self.comps = self.fermi_results.eval_components(x=-self.x0)
+			self.comps = self.fermi_results.eval_components(x=self.x0)
 			self.a_top.plot(self.x0, self.y0, "o", color= "b", label="exp")
 			self.a_top.plot(self.x0, self.fermi_results.best_fit,'r-', label="fit" )
-			self.a_top.plot(self.x0, 10 * self.comps['fermi_dirac'], 'k--', label='Fermi-Dirac component')
-			self.a_top.plot(self.x0, 10 * self.comps['gaussian'], 'k-.', label='Gaussian component')
+			self.a_top.plot(self.x0, self.comps['fermi_dirac'], 'k--', label='Fermi-Dirac component')
+			self.a_top.plot(self.x0, self.comps['gaussian'], 'k-.', label='Gaussian component')
 			self.a_bot.plot(self.x0, self.fermi_results.residual, 'g.', label='residual')
 		self.update_plot()
 	
@@ -366,7 +368,7 @@ class FitWidget(QWidget):
 
 	def fermi_fit(self):
 		if hasattr(self,"fermi_model"):
-			self.fermi_results = self.fermi_model.fit(self.y0, self.fermi_pars, x=-self.x0, nan_policy="omit")
+			self.fermi_results = self.fermi_model.fit(self.y0, self.fermi_pars, x=self.x0, nan_policy="omit")
 
 	def gauss_fit(self, method = "leastsq"):
 		if hasattr(self,"gauss_model"):
