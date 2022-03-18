@@ -5,7 +5,22 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import logging
 
+# Fermi–Dirac distrubution
+def fermi_dirac(x, tempr):
+    """Fermi Dirac distribution function."""
+    k_b = 8.617e-5 # ev/K
+    kt = k_b * tempr
+    # Ef = 0 # eV
+    return 1.0 /(np.exp(x/max(1e-12, kt)) + 1)
 
+def convolve(arr, kernel):
+    """Simple convolution of two arrays."""
+    npts = min(arr.size, kernel.size)
+    pad = np.ones(npts)
+    tmp = np.concatenate((pad*arr[0], arr, pad*arr[-1]))
+    out = np.convolve(tmp, kernel, mode='valid')
+    noff = int((len(out) - npts) / 2)
+    return out[noff:noff+npts]
         
 def normalize(x):
     """

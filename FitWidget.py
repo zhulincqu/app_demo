@@ -13,7 +13,9 @@ QDoubleSpinBox, QLabel, QComboBox
 )
 from PyQt5.QtCore import QDir, Qt
 
-from lmfit.models import GaussianModel, ThermalDistributionModel
+from lmfit.models import GaussianModel
+from arpes.io import example_data
+
 
 # user defined package
 from reader import read_file
@@ -165,6 +167,10 @@ class FitWidget(QWidget):
 		lb_temp = QLabel("Temperature (K)")
 		self.dsb_temp = getDoubleSpinBox()
 		form_layout.addRow(lb_temp, self.dsb_temp)
+
+		lb_fermi_ctr = QLabel("Fermi Center(eV)")
+		self.dsb_fermi_ctr = getDoubleSpinBox()
+		form_layout.addRow(lb_fermi_ctr, self.dsb_fermi_ctr)
 
 		lb_delta_e = QLabel("BL \u0394E (eV)")
 		self.dsb_delta_e = getDoubleSpinBox()
