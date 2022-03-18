@@ -3,37 +3,12 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - python=3.8
-
-  - astropy
-  - xarray>=0.16.1
-  - h5py>=3.2.1
-  - pyqtgraph>=0.12.0,<0.13.0
-
-  - pint
-  - pandas
-  - numpy>=1.20.0,<2.0.0
-  - scipy>=1.6.0,<2.0.0
-  - lmfit>=1.0.0,<2.0.0
+  - python=3.9.7
+  - pandas=1.4.1
+  - numpy=1.21.5
+  - lmfit=1.0.3
+  - pyqt=5.9.2
+  - jupyter
 
   # plotting
-  - matplotlib>=3.0.3
-  - ipywidgets>=7.0.1,<8.0.0
-
-  # Misc deps
-  - scikit-learn>=0.24.0,<1.0.0
-  - pip
-
-  # pip
-  - pip:
-      - PyQt5==5.15
-      - packaging
-      - numba>=0.53.0,<1.0.0
-      - colorama
-      - imageio
-      - titlecase
-      - tqdm
-      - rx
-      - dill
-      - ase>=3.17.0,<3.22.0
-      - -e .
+  - matplotlib=3.5.1
