@@ -1,4 +1,4 @@
-import sys, os # math, ast
+import sys, os 
 import numpy as np
 
 
@@ -63,7 +63,8 @@ class FitWidget(QWidget):
 
 	def create_left_layout(self):
 		# setup Matplotlib Figure: Canvas 
-		self.figure, (self.a_top, self.a_bot) = plt.subplots(2, 1, sharex=True, gridspec_kw={'height_ratios': [4,1], 'hspace': 0.05})
+		self.figure, (self.a_top, self.a_bot) = plt.subplots(2, 1, sharex=True, 
+		gridspec_kw={'height_ratios': [4,1], 'hspace': 0.05})
 		self.canvas = FigureCanvas(self.figure)
 		self.toolbar = NavigationToolbar(self.canvas, self)
 
