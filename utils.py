@@ -5,6 +5,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import logging
 
+def instr_delta_e(bl_delta_e, conv_delta_e):
+    """ Fitting (convolution) deltaE^2 = intrument deltaE^2 + Beamline delta^2 
+    """
+    return np.sqrt(conv_delta_e *conv_delta_e - bl_delta_e * bl_delta_e)
+
 # Fermi–Dirac distrubution
 def fermi_dirac(x, tempr):
     """Fermi Dirac distribution function."""
@@ -21,7 +26,20 @@ def convolve(arr, kernel):
     out = np.convolve(tmp, kernel, mode='valid')
     noff = int((len(out) - npts) / 2)
     return out[noff:noff+npts]
-        
+
+def sigma2fwhm(sigma):
+	fwhm = 2.3548*sigma
+	return fwhm
+
+def fwhm2sigma(fwhm):
+	if isinstance(fwhm, float):
+		sigma = 1.0/2.3548 * fwhm
+		return sigma 
+
+def calculate_height(area, sigma):
+	if isinstance(area, float) and isinstance(sigma, float):
+	    return 0.3989 * area / max(1e-12,sigma)
+                
 def normalize(x):
     """
     Normalize 1d array using max-min way
