@@ -216,7 +216,7 @@ class FitWidget(QWidget):
 		if self.comb_func.currentIndex() == 0:
 			self.gauss_para_group.setEnabled(True)
 			self.fermi_para_group.setDisabled(True)
-			self.b_guess.setVisible(False)
+			self.b_guess.setVisible(True)
 		elif self.comb_func.currentIndex() == 1:
 			self.gauss_para_group.setDisabled(True)
 			self.fermi_para_group.setEnabled(True)
@@ -292,15 +292,26 @@ class FitWidget(QWidget):
 		# preview the Gaussion peak with init parameters 
 		# print("preview is clicked!")
 		if self.has_data():
-			self.setup_gauss_model()
-			self.eval_result = self.gauss_model.eval(self.gauss_pars, x=self.x0)	
-			self.plot_preview_result()
+			if self.comb_func.currentIndex() == 0:
+				self.setup_gauss_model()
+				self.eval_gauss_result = self.gauss_model.eval(self.gauss_pars, x=self.x0)	
+				self.plot_preview_result()
+			elif self.comb_func.currentIndex() == 1:
+				self.setup_fermi_model()
+				self.eval_fermi_result = self.fermi_model.eval(self.fermi_pars, x=self.x0)					
+				self.plot_preview_result()
+
 
 	def plot_preview_result(self):
 		self.clear_plot()
-		self.a_top.plot(self.x0, self.y0, "o", color= "b", label="exp")
-		self.a_top.plot(self.x0, self.eval_result,'r-', label="fit" )
-		self.a_bot.plot(self.x0, self.eval_result-self.y0, 'g.', label='residual')
+		if self.comb_func.currentIndex() == 0:
+			self.a_top.plot(self.x0, self.y0, "o", color= "b", label="exp")
+			self.a_top.plot(self.x0, self.eval_gauss_result,'r-', label="fit" )
+			self.a_bot.plot(self.x0, self.eval_gauss_result-self.y0, 'g.', label='residual')
+		elif self.comb_func.currentIndex() == 1:
+			self.a_top.plot(self.x0, self.y0, "o", color= "b", label="exp")
+			self.a_top.plot(self.x0, self.eval_fermi_result,'r-', label="fit" )
+			self.a_bot.plot(self.x0, self.eval_fermi_result-self.y0, 'g.', label='residual')
 		self.update_plot()
 
 	def fit(self):
