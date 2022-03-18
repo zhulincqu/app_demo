@@ -16,7 +16,7 @@ def fermi_dirac(x, tempr):
     k_b = 8.617e-5 # ev/K
     kt = k_b * tempr
     # Ef = 0 # eV
-    return 1.0 /(np.exp(x/max(1e-12, kt)) + 1)
+    return 1.0 /(np.exp(-x/max(1e-12, kt)) + 1)
 
 def convolve(arr, kernel):
     """Simple convolution of two arrays."""

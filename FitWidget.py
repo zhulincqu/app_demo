@@ -188,9 +188,9 @@ class FitWidget(QWidget):
 		self.fermi_para_group.setDisabled(True)		
 
 		# excutable buttions group
-		# add evalate buttion
-		self.b_eval  = QPushButton('&Evaluate', self)
-		self.b_eval.clicked.connect(self.eval)
+		# add guessate buttion
+		self.b_guess  = QPushButton('&Guess', self)
+		self.b_guess.clicked.connect(self.guess)
 
 		# add preview buttion
 		self.b_preview  = QPushButton('&Preview', self)
@@ -201,7 +201,7 @@ class FitWidget(QWidget):
 		self.b_fit.clicked.connect(self.fit)
 
 		v_layout = QHBoxLayout()
-		v_layout.addWidget(self.b_eval)
+		v_layout.addWidget(self.b_guess)
 		v_layout.addWidget(self.b_preview)
 		v_layout.addWidget(self.b_fit)
 
@@ -271,16 +271,27 @@ class FitWidget(QWidget):
 		self.a_bot.legend(loc=0)
 		self.canvas.draw()
 
-	def eval(self):
-
-		pass
+	def guess(self):
+		if self.has_data():
+			if self.comb_func.currentIndex() == 0:
+				self.setup_gauss_model()
+				self.gauss_pars = self.gauss_model.guess(self.y0, x=self.x0)
+				self.dsb_center.setValue(self.gauss_pars["center"])
+				self.dsb_area.setValue(self.gauss_pars["amplitude"])
+				self.dsb_fwhm.setValue(sigma2fwhm(self.gauss_pars["sigma"]))
+			elif self.comb_func.currentIndex() == 1:
+				self.setup_fermi_model()
+				try:
+					self.fermi_pars= self.fermi_model.guess(self.y0, x=-self.x0)
+				except NotImplementedError:
+					print(f"The guee method is not implemented for model {type(self.setup_gauss_model())}")
 
 	def preview(self):
 		# preview the Gaussion peak with init parameters 
 		# print("preview is clicked!")
 		if self.has_data():
 			self.setup_gauss_model()
-			self.eval_result = self.model.eval(self.gauss_pars, x=self.x0)	
+			self.eval_result = self.gauss_model.eval(self.gauss_pars, x=self.x0)	
 			self.plot_preview_result()
 
 	def plot_preview_result(self):
@@ -313,17 +324,13 @@ class FitWidget(QWidget):
 		self.fermi_pars['center'].set(-self.dsb_fermi_ctr.value()/1000)
 		self.fermi_pars['sigma'].set(0.2)
 		self.fermi_pars['tempr'].set(value=self.dsb_temp.value()/1000, vary=False)
-
-	def fermi_fit(self):
-		if hasattr(self,"fermi_model"):
-			self.fermi_results = self.fermi_model.fit(self.y0, self.fermi_pars, x=-self.x0, nan_policy="omit")
 		
 	def update_result_para(self):
 		if self.comb_func.currentIndex() == 0:		
-			self.dsb_center.setValue(-self.results.params["center"].value)
-			self.dsb_area.setValue(self.results.params["amplitude"].value)
-			self.dsb_fwhm.setValue(sigma2fwhm(self.results.params["sigma"].value))
-			self.dsb_chi_sqr.setValue(self.results.redchi)
+			self.dsb_center.setValue(self.gauss_results.params["center"].value)
+			self.dsb_area.setValue(self.gauss_results.params["amplitude"].value)
+			self.dsb_fwhm.setValue(sigma2fwhm(self.gauss_results.params["sigma"].value))
+			self.dsb_chi_sqr.setValue(self.gauss_results.redchi)
 		elif self.comb_func.currentIndex() == 1:
 			self.dsb_fermi_amp.setValue(self.fermi_results.params["amplitude"].value)
 			self.dsb_fermi_ctr.setValue(-self.fermi_results.params["center"].value * 1000)
@@ -337,9 +344,9 @@ class FitWidget(QWidget):
 		self.clear_plot()
 		if self.comb_func.currentIndex() == 0:		
 			self.a_top.plot(self.x0, self.y0, "o", color= "b", label="exp")
-			self.a_top.plot(self.x0, self.results.best_fit,'r-', label="fit" )
-			self.a_top.fill_between(self.x0, self.results.best_fit, color="r", alpha=0.5)
-			self.a_bot.plot(self.x0, self.results.residual, 'g.', label='residual')
+			self.a_top.plot(self.x0, self.gauss_results.best_fit,'r-', label="fit" )
+			self.a_top.fill_between(self.x0, self.gauss_results.best_fit, color="r", alpha=0.5)
+			self.a_bot.plot(self.x0, self.gauss_results.residual, 'g.', label='residual')
 			# self.a_top.annotate("", xy=(0.5, 0.5), xycoords=self.a_top.transAxes)
 		elif self.comb_func.currentIndex() == 1:
 			self.comps = self.fermi_results.eval_components(x=-self.x0)
@@ -351,15 +358,19 @@ class FitWidget(QWidget):
 		self.update_plot()
 	
 	def setup_gauss_model(self):
-		self.model = GaussianModel()
-		self.gauss_pars = self.model.make_params()
+		self.gauss_model = GaussianModel()
+		self.gauss_pars = self.gauss_model.make_params()
 		self.gauss_pars['center'].set(self.dsb_center.value())
 		self.gauss_pars['sigma'].set(self.dsb_sigma.value())
 		self.gauss_pars['amplitude'].set(self.dsb_area.value())
 
+	def fermi_fit(self):
+		if hasattr(self,"fermi_model"):
+			self.fermi_results = self.fermi_model.fit(self.y0, self.fermi_pars, x=-self.x0, nan_policy="omit")
+
 	def gauss_fit(self, method = "leastsq"):
-		if hasattr(self,"model"):
-			self.results = self.model.fit(self.y0, self.gauss_pars, x=self.x0, method=method, nan_policy="omit")
+		if hasattr(self,"gauss_model"):
+			self.gauss_results = self.gauss_model.fit(self.y0, self.gauss_pars, x=self.x0, method=method, nan_policy="omit")
 
 			
 	def has_data(self):
