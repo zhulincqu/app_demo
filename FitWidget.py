@@ -20,7 +20,7 @@ from lmfit.lineshapes import gaussian
 # user defined package
 from reader import read_file
 from utils import (fwhm2sigma, sigma2fwhm, calculate_height, instr_delta_e, 
-fermi_dirac, convolve, normalize, shirley_baseline)
+fermi_dirac, convolve, timestamp, normalize, shirley_baseline)
 
 
 def getDoubleSpinBox():
@@ -207,6 +207,7 @@ class FitWidget(QWidget):
 
 		self.text_edit = QTextEdit()
 		self.text_edit.setStyleSheet("font-size: 11pt; font: Arial")
+		self.text_edit.setPlaceholderText("Results Report")
 
 		self.right_layout.addWidget(self.comb_func)
 		self.right_layout.addLayout(open_file_layout)
@@ -373,7 +374,8 @@ class FitWidget(QWidget):
 			self.a_top.plot(self.x0, self.gauss_results.best_fit,'r-', label="fit" )
 			self.a_top.fill_between(self.x0, self.gauss_results.best_fit, color="r", alpha=0.5)
 			self.a_bot.plot(self.x0, self.gauss_results.residual, 'g.', label='residual')
-			self.text_edit.setText(self.gauss_results.fit_report())			
+			self.text_edit.append(timestamp())
+			self.text_edit.append(self.gauss_results.fit_report())			
 			# self.a_top.annotate("", xy=(0.5, 0.5), xycoords=self.a_top.transAxes)
 		elif self.comb_func.currentIndex() == 1:
 			self.comps = self.fermi_results.eval_components(x=self.x0)
@@ -382,7 +384,8 @@ class FitWidget(QWidget):
 			self.a_top.plot(self.x0, self.comps['fermi_dirac'], 'k--', label='Fermi-Dirac component')
 			self.a_top.plot(self.x0, self.comps['gaussian'], 'k-.', label='Gaussian component')
 			self.a_bot.plot(self.x0, self.fermi_results.residual, 'g.', label='residual')
-			self.text_edit.setText(self.fermi_results.fit_report())
+			self.text_edit.append(timestamp())
+			self.text_edit.append(self.fermi_results.fit_report())
 		self.update_plot()
 	
 	def setup_gauss_model(self):

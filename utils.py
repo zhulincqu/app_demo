@@ -1,7 +1,15 @@
 import numpy as np
 import pandas as pd
+import time
 import matplotlib.pyplot as plt
 import logging
+
+def timestamp(num=30):
+    """
+    Generate a timestamp YYYYMMDD-hhmmss as file name.
+    """
+    line = "#"*num
+    return "\n" + line  + "\n" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "\n" + line   + "\n"
 
 def instr_delta_e(bl_delta_e, conv_delta_e):
     """ Fitting (convolution) deltaE^2 = intrument deltaE^2 + Beamline delta^2 
