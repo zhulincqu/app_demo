@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QDesktopWidget, 
 QGroupBox, QLineEdit, QHBoxLayout, QVBoxLayout, QFrame, QFormLayout,
-QDoubleSpinBox, QLabel, QComboBox
+QDoubleSpinBox, QLabel, QComboBox, QTextEdit
 )
 from PyQt5.QtCore import QDir, Qt
 
@@ -41,7 +41,7 @@ class FitWidget(QWidget):
 		# set the title
 		self.setWindowTitle("Gaussion Fitting")
 		# setting  the geometry of window
-		self.setGeometry(600, 300, 1200, 700)
+		self.setGeometry(600, 300, 1600, 900)
 		self.center()
 
 		# main Layout
@@ -205,11 +205,15 @@ class FitWidget(QWidget):
 		v_layout.addWidget(self.b_preview)
 		v_layout.addWidget(self.b_fit)
 
+		self.text_edit = QTextEdit()
+		self.text_edit.setStyleSheet("font-size: 11pt; font: Arial")
+
 		self.right_layout.addWidget(self.comb_func)
 		self.right_layout.addLayout(open_file_layout)
 		self.right_layout.addWidget(self.gauss_para_group)
 		self.right_layout.addWidget(self.fermi_para_group)
 		self.right_layout.addLayout(v_layout)
+		self.right_layout.addWidget(self.text_edit)
 
 	def choose_func(self):
 		# print(f"here {self.comb_func.currentIndex()}")
@@ -335,8 +339,16 @@ class FitWidget(QWidget):
 		self.fermi_pars = self.fermi_model.make_params()
 		self.fermi_pars['amplitude'].set(self.dsb_fermi_amp.value())
 		self.fermi_pars['center'].set(self.dsb_fermi_ctr.value()/1000)
-		self.fermi_pars['sigma'].set(0.2)
+		self.fermi_pars['sigma'].set(self.fermi_sigma if hasattr(self, "fermi_sigma") else 0.2)
 		self.fermi_pars['tempr'].set(value=self.dsb_temp.value(), vary=False)
+		# Mathmatic constraint 
+		self.fermi_pars["Ef"].set(expr="center")
+		self.fermi_pars.add("Height", expr="0.3989*amplitude/max(1e-12,sigma)")
+		self.fermi_pars.add("FWHM", expr="2.3548*sigma")
+		self.fermi_pars.add("Beamline_dE", self.dsb_beaml_e.value()/1000, vary=False)
+		self.fermi_pars.add("Conv_dE",expr="FWHM")
+		self.fermi_pars.add("Instrument_dE",expr="sqrt(Conv_dE**2-Beamline_dE**2)")
+
 		
 	def update_result_para(self):
 		if self.comb_func.currentIndex() == 0:		
@@ -350,6 +362,7 @@ class FitWidget(QWidget):
 			self.dsb_conv_e.setValue(sigma2fwhm(self.fermi_results.params["sigma"].value) * 1000)
 			self.fermi_heigh = calculate_height(self.fermi_results.params["amplitude"].value,
 			self.fermi_results.params["sigma"].value )
+			self.fermi_sigma = self.fermi_results.params["sigma"].value
 			# print(self.fermi_heigh)
 
 
@@ -360,6 +373,7 @@ class FitWidget(QWidget):
 			self.a_top.plot(self.x0, self.gauss_results.best_fit,'r-', label="fit" )
 			self.a_top.fill_between(self.x0, self.gauss_results.best_fit, color="r", alpha=0.5)
 			self.a_bot.plot(self.x0, self.gauss_results.residual, 'g.', label='residual')
+			self.text_edit.setText(self.gauss_results.fit_report())			
 			# self.a_top.annotate("", xy=(0.5, 0.5), xycoords=self.a_top.transAxes)
 		elif self.comb_func.currentIndex() == 1:
 			self.comps = self.fermi_results.eval_components(x=self.x0)
@@ -368,6 +382,7 @@ class FitWidget(QWidget):
 			self.a_top.plot(self.x0, self.comps['fermi_dirac'], 'k--', label='Fermi-Dirac component')
 			self.a_top.plot(self.x0, self.comps['gaussian'], 'k-.', label='Gaussian component')
 			self.a_bot.plot(self.x0, self.fermi_results.residual, 'g.', label='residual')
+			self.text_edit.setText(self.fermi_results.fit_report())
 		self.update_plot()
 	
 	def setup_gauss_model(self):

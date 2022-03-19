@@ -6,15 +6,18 @@ import logging
 def instr_delta_e(bl_delta_e, conv_delta_e):
     """ Fitting (convolution) deltaE^2 = intrument deltaE^2 + Beamline delta^2 
     """
-    return np.sqrt(conv_delta_e *conv_delta_e - bl_delta_e * bl_delta_e)
+    if bl_delta_e < conv_delta_e:
+        return np.sqrt(conv_delta_e *conv_delta_e - bl_delta_e * bl_delta_e)
+    else:
+        return np.nan
 
 # Fermi–Dirac distrubution
-def fermi_dirac(x, tempr):
+def fermi_dirac(x, tempr, Ef):
     """Fermi Dirac distribution function."""
     k_b = 8.617e-5 # ev/K
     kt = k_b * tempr
     # Ef = 0 # eV
-    return 1.0 /(np.exp(-x/max(1e-12, kt)) + 1)
+    return 1.0 /(np.exp(-(x-Ef)/max(1e-12, kt)) + 1)
 
 def convolve(arr, kernel):
     """Simple convolution of two arrays."""
