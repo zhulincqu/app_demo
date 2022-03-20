@@ -165,7 +165,7 @@ class FitWidget(QWidget):
 		self.dsb_chi_sqr = getDoubleSpinBox()
 		self.dsb_chi_sqr.setReadOnly(True)	
 		self.dsb_chi_sqr.setButtonSymbols(2)
-		self.dsb_chi_sqr.setStyleSheet("border: 0px;; font-family: Arialtext_style; font-size: 11pt;")	
+		self.dsb_chi_sqr.setStyleSheet(text_style)	
 		form_layout.addRow(lb_chi_sqr, self.dsb_chi_sqr)	
 		self.gauss_para_group.setLayout(form_layout)
 
@@ -403,18 +403,47 @@ class FitWidget(QWidget):
 		if self.comb_func.currentIndex() == 0:		
 			self.a_top.plot(self.x0, self.y0, "o", color= "b", label="exp")
 			self.a_top.plot(self.x0, self.gauss_results.best_fit,'r-', label="fit" )
+
+			# peak position:
+			pkcenter = self.gauss_results.params["center"].value
+			pkheight = calculate_height(self.gauss_results.params["amplitude"].value,
+			self.gauss_results.params["sigma"].value )
 			self.a_top.fill_between(self.x0, self.gauss_results.best_fit, color="r", alpha=0.5)
+			self.a_top.vlines(pkcenter, ymin=0, ymax=pkheight, color="k", linestyles="dashed")
+
+			# display fitting results in the plot.
+			area = self.gauss_results.params["amplitude"].value
+			sigma = self.gauss_results.params["sigma"].value
+			fwhm = sigma2fwhm(sigma)
+			re_chi_sqr = self.gauss_results.redchi
+			result_report = f" Peak position: {pkcenter:.3f}\n Area: {area:.3f}\n FWHM: {fwhm:.3f}\n Reduce Chi-Sqr: {re_chi_sqr:.3f}"
+			self.a_top.annotate(result_report, xy=(0.1, 0.5), xycoords=self.a_top.transAxes)
+
+			# difference curve
 			self.a_bot.plot(self.x0, self.gauss_results.residual, 'g.', label='residual')
+
+			# output full result report to tex editor
 			self.text_edit.append(timestamp())
 			self.text_edit.append(self.gauss_results.fit_report())			
-			# self.a_top.annotate("", xy=(0.5, 0.5), xycoords=self.a_top.transAxes)
 		elif self.comb_func.currentIndex() == 1:
 			self.comps = self.fermi_results.eval_components(x=self.x0)
 			self.a_top.plot(self.x0, self.y0, "o", color= "b", label="exp")
 			self.a_top.plot(self.x0, self.fermi_results.best_fit,'r-', label="fit" )
 			self.a_top.plot(self.x0, self.comps['fermi_dirac'], 'k--', label='Fermi-Dirac component')
 			self.a_top.plot(self.x0, self.comps['gaussian'], 'k-.', label='Gaussian component')
+
+			# display fitting results in the plot.
+			fermi_center = self.fermi_results.params["center"].value * 1000
+			tempr = self.fermi_results.params["tempr"].value
+			conv_de = self.fermi_results.params["Conv_dE"].value * 1000
+			instr_de = self.fermi_results.params["Instrument_dE"].value * 1000
+			result_report = f" Fermi center: {fermi_center:.3f}\n Temperature: {tempr:.3f}K\n Conv dE: {conv_de:.3f}\n Instrument dE: {instr_de:.3f}"
+			self.a_top.annotate(result_report, xy=(0.1, 0.5), xycoords=self.a_top.transAxes)
+
+			# display difference curve
 			self.a_bot.plot(self.x0, self.fermi_results.residual, 'g.', label='residual')
+
+			# output full result report to tex editor
 			self.text_edit.append(timestamp())
 			self.text_edit.append(self.fermi_results.fit_report())
 		self.update_plot()
