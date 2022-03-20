@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QDesktopWidget, 
 QGroupBox, QLineEdit, QHBoxLayout, QVBoxLayout, QFrame, QFormLayout,
-QDoubleSpinBox, QLabel, QComboBox, QTextEdit
+QDoubleSpinBox, QLabel, QComboBox, QTextEdit, QAbstractSpinBox,
 )
 from PyQt5.QtCore import QDir, Qt
 
@@ -29,6 +29,7 @@ def getDoubleSpinBox():
 	box.setMaximum(float("inf"))
 	box.setDecimals(3)
 	box.setSingleStep(0.05)
+	box.setStyleSheet("font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
 	box.setValue(10.00)
 	return box
 	
@@ -134,17 +135,23 @@ class FitWidget(QWidget):
 		# connect mathmatic constraint variable height, area, sigma
 		self.dsb_sigma.valueChanged.connect(self.update_height)
 		self.dsb_sigma.setReadOnly(True)
+		self.dsb_sigma.setButtonSymbols(2)
+		self.dsb_sigma.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
 		form_layout.addRow(lb_sigma, self.dsb_sigma)		
 
 		lb_height = QLabel("Height")
 		self.dsb_height = getDoubleSpinBox()
 		self.dsb_height.setValue(calculate_height(self.dsb_area.value(), self.dsb_sigma.value()))
 		self.dsb_height.setReadOnly(True)
+		self.dsb_height.setButtonSymbols(2)
+		self.dsb_height.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
 		form_layout.addRow(lb_height, self.dsb_height)	
 			
 		lb_chi_sqr = QLabel("Reduced Chi-Sqr")
 		self.dsb_chi_sqr = getDoubleSpinBox()
-		self.dsb_chi_sqr.setReadOnly(True)		
+		self.dsb_chi_sqr.setReadOnly(True)	
+		self.dsb_chi_sqr.setButtonSymbols(2)
+		self.dsb_chi_sqr.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")	
 		form_layout.addRow(lb_chi_sqr, self.dsb_chi_sqr)	
 
 		self.gauss_para_group.setLayout(form_layout)
@@ -164,23 +171,32 @@ class FitWidget(QWidget):
 		self.dsb_fermi_ctr.setValue(0.0)
 		form_layout.addRow(lb_fermi_ctr, self.dsb_fermi_ctr)
 
-		lb_fermi_amp = QLabel("Amplitude")
-		self.dsb_fermi_amp = getDoubleSpinBox()
-		self.dsb_fermi_amp.setValue(10)
-		form_layout.addRow(lb_fermi_amp, self.dsb_fermi_amp)
-
 		lb_beaml_e = QLabel("BL \u0394E (meV)")
 		self.dsb_beaml_e = getDoubleSpinBox()
 		form_layout.addRow(lb_beaml_e, self.dsb_beaml_e)
 		self.dsb_beaml_e.valueChanged.connect(self.update_meters_e)
 
+		lb_fermi_amp = QLabel("Amplitude")
+		self.dsb_fermi_amp = getDoubleSpinBox()
+		self.dsb_fermi_amp.setValue(1)
+		self.dsb_fermi_amp.setButtonSymbols(2)
+		self.dsb_fermi_amp.setReadOnly(True)
+		self.dsb_fermi_amp.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
+		form_layout.addRow(lb_fermi_amp, self.dsb_fermi_amp)
+
 		lb_conv_e = QLabel("Convolve \u0394E (meV)")
 		self.dsb_conv_e = getDoubleSpinBox()
+		self.dsb_conv_e.setButtonSymbols(2)
+		self.dsb_conv_e.setReadOnly(True)
+		self.dsb_conv_e.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
 		form_layout.addRow(lb_conv_e, self.dsb_conv_e)
 		self.dsb_conv_e.valueChanged.connect(self.update_meters_e)
 		
 		lb_instr = QLabel("Instrument \u0394E (meV)")
 		self.dsb_instr = getDoubleSpinBox()
+		self.dsb_instr.setButtonSymbols(2)
+		self.dsb_instr.setReadOnly(True)
+		self.dsb_instr.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
 		form_layout.addRow(lb_instr, self.dsb_instr)
 		
 
