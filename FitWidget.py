@@ -37,9 +37,9 @@ class FitWidget(QWidget):
 	def __init__(self):
 		super().__init__()
 		# decorate the UI
-		# self.setStyleSheet(push_button_style + label_style + spin_box_style)
+		self.setStyleSheet(push_button_style + label_style + spin_box_style)
 		# self.setStyleSheet(label_style)
-		self.setStyleSheet(spin_box_style)
+		# self.setStyleSheet(spin_box_style)
 		self.setUi()
 
 	def setUi(self):
