@@ -387,15 +387,12 @@ class FitWidget(QWidget):
 			self.dsb_center.setValue(self.gauss_results.params["center"].value)
 			self.dsb_area.setValue(self.gauss_results.params["amplitude"].value)
 			self.dsb_fwhm.setValue(sigma2fwhm(self.gauss_results.params["sigma"].value))
+			self.dsb_height.setValue(self.gauss_results.params["height"].value)
 			self.dsb_chi_sqr.setValue(self.gauss_results.redchi)
 		elif self.comb_func.currentIndex() == 1:
 			self.dsb_fermi_amp.setValue(self.fermi_results.params["amplitude"].value)
 			self.dsb_fermi_ctr.setValue(self.fermi_results.params["center"].value * 1000)
 			self.dsb_conv_e.setValue(sigma2fwhm(self.fermi_results.params["sigma"].value) * 1000)
-			self.fermi_heigh = calculate_height(self.fermi_results.params["amplitude"].value,
-			self.fermi_results.params["sigma"].value )
-			self.fermi_sigma = self.fermi_results.params["sigma"].value
-			# print(self.fermi_heigh)
 
 
 	def plot_result(self):
@@ -416,8 +413,8 @@ class FitWidget(QWidget):
 			sigma = self.gauss_results.params["sigma"].value
 			fwhm = sigma2fwhm(sigma)
 			re_chi_sqr = self.gauss_results.redchi
-			result_report = f" Peak position: {pkcenter:.3f}\n Area: {area:.3f}\n FWHM: {fwhm:.3f}\n Reduce Chi-Sqr: {re_chi_sqr:.3f}"
-			self.a_top.annotate(result_report, xy=(0.1, 0.5), xycoords=self.a_top.transAxes)
+			result_report = f" Peak position: {pkcenter:.3f}\n Area: {area:.3f}\n FWHM: {fwhm:.3f}\n Height:{pkheight:.3f}\n Reduced Chi-Sqr: {re_chi_sqr:.3f}"
+			self.a_top.annotate(result_report, xy=(0.0, 0.5), xycoords=self.a_top.transAxes)
 
 			# difference curve
 			self.a_bot.plot(self.x0, self.gauss_results.residual, 'g.', label='residual')
@@ -438,7 +435,7 @@ class FitWidget(QWidget):
 			conv_de = self.fermi_results.params["Conv_dE"].value * 1000
 			instr_de = self.fermi_results.params["Instrument_dE"].value * 1000
 			result_report = f" Fermi center: {fermi_center:.3f}\n Temperature: {tempr:.3f}K\n Conv dE: {conv_de:.3f}\n Instrument dE: {instr_de:.3f}"
-			self.a_top.annotate(result_report, xy=(0.1, 0.5), xycoords=self.a_top.transAxes)
+			self.a_top.annotate(result_report, xy=(0.0, 0.5), xycoords=self.a_top.transAxes)
 
 			# display difference curve
 			self.a_bot.plot(self.x0, self.fermi_results.residual, 'g.', label='residual')

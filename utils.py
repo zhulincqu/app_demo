@@ -45,9 +45,9 @@ def fwhm2sigma(fwhm):
 		sigma = 1.0/2.3548 * fwhm
 		return sigma 
 
-def calculate_height(area, sigma):
-	if isinstance(area, float) and isinstance(sigma, float):
-	    return 0.3989 * area / max(1e-12,sigma)
+def calculate_height(amplitude, sigma):
+	if isinstance(amplitude, float) and isinstance(sigma, float):
+	    return 0.3989423 * amplitude / max(1e-12,sigma)
                 
 def normalize(x):
     """
