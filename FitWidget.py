@@ -21,7 +21,7 @@ from lmfit.lineshapes import gaussian
 from reader import read_file
 from utils import (fwhm2sigma, sigma2fwhm, calculate_height, instr_delta_e, 
 fermi_dirac, convolve, timestamp, normalize, shirley_baseline)
-from style_sheet import push_button_style, spin_box_style
+from style_sheet import push_button_style, spin_box_style, text_style
 
 
 def getDoubleSpinBox():
@@ -30,7 +30,7 @@ def getDoubleSpinBox():
 	box.setMaximum(float("inf"))
 	box.setDecimals(3)
 	box.setSingleStep(0.05)
-	box.setStyleSheet("font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
+	box.setStyleSheet(text_style)
 	box.setValue(10.00)
 	return box
 	
@@ -90,13 +90,13 @@ class FitWidget(QWidget):
 		form_func = QFormLayout()
 		self.comb_func = QComboBox(self)
 		self.comb_func.addItems(self.func_list)
-		self.comb_func.setStyleSheet("font-family: Arial, Helvetica, sans-serif; font-size: 16pt;")
+		self.comb_func.setStyleSheet("font-family: Arial; font-size: 16pt;")
 		self.comb_func.setCurrentIndex(0)
 		self.comb_func.currentIndexChanged.connect(self.choose_func)
 
 		# add select function button
 		lb_sel_func = QLabel("Select Spectrum Type:")
-		lb_sel_func.setStyleSheet("font-family: Arial, Helvetica, sans-serif; font-size: 16pt;")
+		lb_sel_func.setStyleSheet("font-family: Arialtext_style; font-size: 16pt;")
 		form_func.addRow(lb_sel_func, self.comb_func)
 
 		# add open button
@@ -112,7 +112,7 @@ class FitWidget(QWidget):
 
 		self.l_path_file.setAlignment(Qt.AlignLeft)
 		self.l_path_file.setText(self.dir)
-		self.l_path_file.setStyleSheet("font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
+		self.l_path_file.setStyleSheet(text_style)
 
 		# open file group
 		open_file_layout = QHBoxLayout()
@@ -150,7 +150,7 @@ class FitWidget(QWidget):
 		self.dsb_sigma.valueChanged.connect(self.update_height)
 		self.dsb_sigma.setReadOnly(True)
 		self.dsb_sigma.setButtonSymbols(2)
-		self.dsb_sigma.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
+		self.dsb_sigma.setStyleSheet(text_style)
 		form_layout.addRow(lb_sigma, self.dsb_sigma)		
 
 		lb_height = QLabel("Height")
@@ -158,14 +158,14 @@ class FitWidget(QWidget):
 		self.dsb_height.setValue(calculate_height(self.dsb_area.value(), self.dsb_sigma.value()))
 		self.dsb_height.setReadOnly(True)
 		self.dsb_height.setButtonSymbols(2)
-		self.dsb_height.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
+		self.dsb_height.setStyleSheet(text_style)
 		form_layout.addRow(lb_height, self.dsb_height)	
 			
 		lb_chi_sqr = QLabel("Reduced Chi-Sqr")
 		self.dsb_chi_sqr = getDoubleSpinBox()
 		self.dsb_chi_sqr.setReadOnly(True)	
 		self.dsb_chi_sqr.setButtonSymbols(2)
-		self.dsb_chi_sqr.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")	
+		self.dsb_chi_sqr.setStyleSheet("border: 0px;; font-family: Arialtext_style; font-size: 11pt;")	
 		form_layout.addRow(lb_chi_sqr, self.dsb_chi_sqr)	
 		self.gauss_para_group.setLayout(form_layout)
 
@@ -196,14 +196,14 @@ class FitWidget(QWidget):
 		self.dsb_fermi_amp.setValue(1)
 		self.dsb_fermi_amp.setButtonSymbols(2)
 		self.dsb_fermi_amp.setReadOnly(True)
-		self.dsb_fermi_amp.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
+		self.dsb_fermi_amp.setStyleSheet(text_style)
 		form_layout.addRow(lb_fermi_amp, self.dsb_fermi_amp)
 
 		lb_conv_e = QLabel("Convolve \u0394E (meV)")
 		self.dsb_conv_e = getDoubleSpinBox()
 		self.dsb_conv_e.setButtonSymbols(2)
 		self.dsb_conv_e.setReadOnly(True)
-		self.dsb_conv_e.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
+		self.dsb_conv_e.setStyleSheet(text_style)
 		form_layout.addRow(lb_conv_e, self.dsb_conv_e)
 		self.dsb_conv_e.valueChanged.connect(self.update_meters_e)
 		
@@ -211,7 +211,7 @@ class FitWidget(QWidget):
 		self.dsb_instr = getDoubleSpinBox()
 		self.dsb_instr.setButtonSymbols(2)
 		self.dsb_instr.setReadOnly(True)
-		self.dsb_instr.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
+		self.dsb_instr.setStyleSheet(text_style)
 		form_layout.addRow(lb_instr, self.dsb_instr)
 		
 

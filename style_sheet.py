@@ -3,12 +3,12 @@ push_button_style =\
 QPushButton {
     font-family: Arial, Helvetica, sans-serif;
     font-size: 12pt;
+    min-width: 80px;
+    min-height: 30px;
     border: 2px solid #8f8f91;
     border-radius: 6px;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                     stop: 0 #f6f7fa, stop: 1 #dadbde);
-    min-width: 80px;
-    min-height: 30px;
 }
 """
 
@@ -22,4 +22,5 @@ QDoubleSpinBox {
 }
 """
 
+text_style = "font-family: Arial; font-size: 11pt;"
 
