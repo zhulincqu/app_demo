@@ -21,7 +21,7 @@ from lmfit.lineshapes import gaussian
 from reader import read_file
 from utils import (fwhm2sigma, sigma2fwhm, calculate_height, instr_delta_e, 
 fermi_dirac, convolve, timestamp, normalize, shirley_baseline)
-from style_sheet import push_button_style, label_style, spin_box_style
+from style_sheet import push_button_style, spin_box_style
 
 
 def getDoubleSpinBox():
@@ -38,7 +38,7 @@ class FitWidget(QWidget):
 	def __init__(self):
 		super().__init__()
 		# decorate the UI
-		self.setStyleSheet(push_button_style + label_style + spin_box_style)
+		self.setStyleSheet(push_button_style + spin_box_style)
 		# self.setStyleSheet(label_style)
 		# self.setStyleSheet(spin_box_style)
 		self.setUi()
@@ -87,11 +87,17 @@ class FitWidget(QWidget):
 		self.func_list = ["Core level", "Fermi edge"]
 
 		# create comboBox swithes the different functions
+		form_func = QFormLayout()
 		self.comb_func = QComboBox(self)
 		self.comb_func.addItems(self.func_list)
-		self.comb_func.currentIndexChanged.connect(self.choose_func)
+		self.comb_func.setStyleSheet("font-family: Arial, Helvetica, sans-serif; font-size: 16pt;")
 		self.comb_func.setCurrentIndex(0)
-		
+		self.comb_func.currentIndexChanged.connect(self.choose_func)
+
+		# add select function button
+		lb_sel_func = QLabel("Select Spectrum Type:")
+		lb_sel_func.setStyleSheet("font-family: Arial, Helvetica, sans-serif; font-size: 16pt;")
+		form_func.addRow(lb_sel_func, self.comb_func)
 
 		# add open button
 		self.b_open = QPushButton('Open', self)
@@ -103,8 +109,10 @@ class FitWidget(QWidget):
 
 		# add path filename line edit
 		self.l_path_file = QLineEdit()
+
 		self.l_path_file.setAlignment(Qt.AlignLeft)
 		self.l_path_file.setText(self.dir)
+		self.l_path_file.setStyleSheet("font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")
 
 		# open file group
 		open_file_layout = QHBoxLayout()
@@ -115,6 +123,7 @@ class FitWidget(QWidget):
 		# user input parameters for Gaussian fit
 		self.gauss_para_group = QGroupBox()
 		self.gauss_para_group.setTitle("Core Level")
+		self.gauss_para_group.setStyleSheet("font-size: 11pt")
 
 		form_layout = QFormLayout()
 		lb_ctr = QLabel("Center (eV)")
@@ -158,11 +167,12 @@ class FitWidget(QWidget):
 		self.dsb_chi_sqr.setButtonSymbols(2)
 		self.dsb_chi_sqr.setStyleSheet("border: 0px;; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;")	
 		form_layout.addRow(lb_chi_sqr, self.dsb_chi_sqr)	
-
 		self.gauss_para_group.setLayout(form_layout)
+
 
 		self.fermi_para_group = QGroupBox()
 		self.fermi_para_group.setTitle("Fermi Edge")
+		self.fermi_para_group.setStyleSheet("font-size: 11pt")
 
 		form_layout = QFormLayout()
 		lb_temp = QLabel("Temperature (K)")
@@ -230,7 +240,7 @@ class FitWidget(QWidget):
 		self.text_edit.setStyleSheet("font-size: 11pt; font: Arial")
 		self.text_edit.setPlaceholderText("Results Report")
 
-		self.right_layout.addWidget(self.comb_func)
+		self.right_layout.addLayout(form_func)
 		self.right_layout.addLayout(open_file_layout)
 		self.right_layout.addWidget(self.gauss_para_group)
 		self.right_layout.addWidget(self.fermi_para_group)
