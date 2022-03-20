@@ -21,6 +21,7 @@ from lmfit.lineshapes import gaussian
 from reader import read_file
 from utils import (fwhm2sigma, sigma2fwhm, calculate_height, instr_delta_e, 
 fermi_dirac, convolve, timestamp, normalize, shirley_baseline)
+from style_sheet import push_button_style, label_style, spin_box_style
 
 
 def getDoubleSpinBox():
@@ -36,6 +37,10 @@ def getDoubleSpinBox():
 class FitWidget(QWidget):
 	def __init__(self):
 		super().__init__()
+		# decorate the UI
+		self.setStyleSheet(push_button_style + label_style + spin_box_style)
+		# self.setStyleSheet(label_style)
+		# self.setStyleSheet(spin_box_style)
 		self.setUi()
 
 	def setUi(self):
